@@ -105,6 +105,16 @@ def stats():
         "avg_votes":    round(df["VOTES"].mean(), 1),
     }
 
+@app.get("/debug")
+def debug():
+    import os
+    return {
+        "csv_path": CSV_PATH,
+        "csv_exists": os.path.exists(CSV_PATH),
+        "cwd": os.getcwd(),
+        "files_in_cwd": os.listdir("."),
+    }
+
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
