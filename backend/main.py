@@ -27,13 +27,12 @@ PROFANITY_MAP = {"🟢": "green", "🟡": "yellow", "🔴": "red"}
 
 
 def load_data() -> pd.DataFrame:
-    df = pd.read_csv(CSV_PATH)
+    df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
     df = df.dropna(subset=["text"])
     df["text"] = df["text"].astype(str)
     df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
     df = df.dropna(subset=["DATE"])
     return df
-
 
 def format_post(row) -> dict:
     """Convert a CSV row into the shape the React frontend expects."""
@@ -49,8 +48,10 @@ def format_post(row) -> dict:
 # ── /top-posts ───────────────────────────────────────────────────────────────
 @app.get("/top-posts")
 def top_posts(limit: int = 5):
-    """Top N posts by votes, most recent first on ties."""
+    """Top N posts by votes from the last 30 days, most recent first on ties."""
     df = load_data()
+    cutoff = df["DATE"].max() - pd.Timedelta(days=5)
+    df = df[df["DATE"] >= cutoff]
     top = (
         df.sort_values(["VOTES", "DATE"], ascending=[False, False])
         .head(limit)
