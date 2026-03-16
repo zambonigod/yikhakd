@@ -1,4 +1,4 @@
-text,timestamp,DATE,VOTES,prediction,profanity_emoji
+text,DATE,VOTES,prediction,profanity_emoji
 Coffee machine is fixed!,2026-02-13T13:10:50.161Z,6,1,1,🟢
 Dating in the dark was fun !!,2026-02-13T08:09:05.852Z,3,2,2,🟢
 love it when my friends get into relationships and completely forget i exist,2026-02-13T06:01:30.752Z,16,0,2,🟢
