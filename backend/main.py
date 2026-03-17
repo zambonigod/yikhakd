@@ -79,7 +79,7 @@ def active_times():
 
 # ── /search ──────────────────────────────────────────────────────────────────
 @app.get("/search")
-def search(keyword: str = Query(..., min_length=1), limit: int = 100):
+def search(keyword: str = Query(..., min_length=1)):
     """Search posts by keyword, grouped by sentiment."""
     df = load_data()
     mask = df["text"].str.contains(keyword, case=False, na=False)
