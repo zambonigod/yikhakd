@@ -199,6 +199,9 @@ export default function YikHakd() {
   const [activeTab, setActiveTab]         = useState(null);
   const [lastUpdated, setLastUpdated]     = useState(new Date());
   const [usingMock, setUsingMock]         = useState(true);
+  const [sortBy, setSortBy]               = useState("recent");
+  const [showSortMenu, setShowSortMenu]   = useState(false);
+  const [trendingTopic, setTrendingTopic] = useState(null);
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -209,6 +212,10 @@ export default function YikHakd() {
         setActiveTimes(times);
         setUsingMock(false);
         setLastUpdated(new Date());
+        try {
+          const trend = await apiFetch("/trending-topic");
+          setTrendingTopic(trend.topic);
+        } catch {}
       } catch {}
     };
     load();
@@ -232,6 +239,13 @@ export default function YikHakd() {
   };
 
   const peakHour = activeTimes.reduce((a, b) => a.count > b.count ? a : b, activeTimes[0]);
+
+  const sortPosts = (posts) => {
+    if (sortBy === "recent")   return [...posts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (sortBy === "popular")  return [...posts].sort((a, b) => b.likes - a.likes);
+    if (sortBy === "unpopular") return [...posts].sort((a, b) => a.likes - b.likes);
+    return posts;
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#07101f", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" }}>
@@ -275,13 +289,7 @@ export default function YikHakd() {
             your campus, unfiltered
           </p>
 
-          {usingMock && (
-            <div style={{
-              display: "block", marginTop: 10,
-              background: "rgba(255,209,102,0.07)", border: "1px solid rgba(255,209,102,0.2)",
-              borderRadius: 20, padding: "4px 14px", fontSize: 11, color: "#ffd166", fontFamily: "monospace",
-            }}>⚠ demo mode – connect API at {API_BASE}</div>
-          )}
+
         </div>
 
         {/* ── SEARCH ── */}
@@ -332,12 +340,72 @@ export default function YikHakd() {
                 {searchResults.total} posts found
               </span>
             </div>
+
+            {/* ── FILTER BAR ── */}
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <button
+                onClick={() => setShowSortMenu(v => !v)}
+                style={{
+                  background: `rgba(28,41,77,0.4)`, border: `1px solid ${MU_BLUE}`,
+                  borderRadius: 20, padding: "6px 16px", cursor: "pointer",
+                  color: "#dde8ff", fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+                  display: "flex", alignItems: "center", gap: 8,
+                }}
+              >
+                <span>Filter by</span>
+                <span style={{ fontSize: 10, color: YY_GREEN }}>
+                  {{ recent: "Most Recent", popular: "Most Popular", unpopular: "Least Popular" }[sortBy]} ▾
+                </span>
+              </button>
+              {showSortMenu && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 10,
+                  background: "#0d1a2e", border: `1px solid ${MU_BLUE}`,
+                  borderRadius: 12, overflow: "hidden", minWidth: 180,
+                  boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
+                }}>
+                  {[["recent", "Most Recent 🕐"], ["popular", "Most Popular ⬆️"], ["unpopular", "Least Popular ⬇️"]].map(([val, label]) => (
+                    <button key={val} onClick={() => { setSortBy(val); setShowSortMenu(false); }} style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      background: sortBy === val ? `${YY_GREEN}22` : "transparent",
+                      border: "none", borderBottom: `1px solid rgba(28,41,77,0.5)`,
+                      padding: "10px 16px", color: sortBy === val ? YY_GREEN : "#dde8ff",
+                      fontFamily: "'DM Sans', sans-serif", fontSize: 13, cursor: "pointer",
+                    }}>{label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {["positive", "neutral", "negative"].map(s => (
-                <SearchResultTab key={s} sentiment={s} posts={searchResults[s]} count={searchResults[s].length} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <SearchResultTab key={s} sentiment={s} posts={sortPosts(searchResults[s])} count={searchResults[s].length} activeTab={activeTab} setActiveTab={setActiveTab} />
               ))}
             </div>
           </div>
+        )}
+
+        {/* ── TRENDING TOPIC ── */}
+        {trendingTopic && (
+          <section style={{ marginBottom: 32 }}>
+            <div style={{
+              background: `linear-gradient(135deg, rgba(28,41,77,0.6) 0%, rgba(23,209,171,0.08) 100%)`,
+              border: `1.5px solid ${YY_GREEN}44`,
+              borderRadius: 16, padding: "18px 24px",
+              display: "flex", alignItems: "center", gap: 16,
+              boxShadow: `0 0 32px ${YY_GREEN}18`,
+            }}>
+              <span style={{ fontSize: 32 }}>👀</span>
+              <div>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(200,216,255,0.4)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: 2 }}>
+                  what mercyhurst is talking about most
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 22, fontFamily: "'Bebas Neue', cursive", color: YY_GREEN, letterSpacing: 2 }}>
+                  {trendingTopic}
+                </p>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* ── TOP 5 ── */}
