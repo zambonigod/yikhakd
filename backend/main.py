@@ -83,7 +83,7 @@ def search(keyword: str = Query(..., min_length=1)):
     """Search posts by keyword, grouped by sentiment."""
     df = load_data()
     mask = df["text"].str.contains(keyword, case=False, na=False)
-    results = df[mask].head(limit)
+    results = df[mask]
 
     posts = [format_post(row) for _, row in results.iterrows()]
 
