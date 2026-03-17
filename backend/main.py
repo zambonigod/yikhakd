@@ -64,7 +64,7 @@ def top_posts(limit: int = 5):
 def active_times():
     """Post counts grouped by hour-of-day for the activity bar chart."""
     df = load_data()
-    df["hour"] = df["DATE"].dt.hour
+    df["hour"] = (df["DATE"] - pd.Timedelta(hours=5)).dt.hour
     counts = df.groupby("hour").size().reset_index(name="count")
 
     # fill any missing hours with 0
